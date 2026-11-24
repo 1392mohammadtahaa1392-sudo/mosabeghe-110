@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مسابقه ۱۱۰ | مدرسه شاهد افشار</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:'Vazirmatn','IRANSansX','Segoe UI',Tahoma,sans-serif;background:linear-gradient(145deg,#082f49 0%,#0f172a 48%,#172554 100%);color:#f8fafc}
+header{padding:18px 24px;background:linear-gradient(90deg,#0c4a6e,#172554);border-bottom:1px solid #38bdf8;display:flex;justify-content:space-between;align-items:center;gap:15px}
+h1{margin:0;font-size:25px} .sub{color:#94a3b8;font-size:13px;margin-top:5px}
+.wrap{display:grid;grid-template-columns:340px 1fr;gap:18px;padding:18px;max-width:1500px;margin:auto}
+.panel{background:rgba(15,23,42,.88);border:1px solid #2563eb;border-radius:18px;padding:16px;box-shadow:0 12px 30px rgba(0,0,0,.22)}
+.panel h2{font-size:17px;margin:0 0 12px}
+textarea{width:100%;height:260px;background:#0f172a;color:white;border:1px solid #475569;border-radius:10px;padding:12px;font-family:inherit;resize:vertical}
+button{border:0;border-radius:10px;padding:11px 14px;font-family:inherit;font-weight:bold;cursor:pointer;margin:4px}
+.primary{background:linear-gradient(90deg,#facc15,#fb923c);color:#422006}.blue{background:linear-gradient(90deg,#38bdf8,#67e8f9);color:#082f49}.green{background:linear-gradient(90deg,#34d399,#a3e635);color:#052e1b}.red{background:#fb7185;color:#4c0519}.dark{background:#334155;color:#f8fafc}
+.info{background:#0f172a;border-radius:12px;padding:12px;margin-top:10px;line-height:1.9}
+.big{font-size:23px;font-weight:bold}.muted{color:#94a3b8}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:0;direction:ltr;background:#0f172a;padding:0;border-radius:8px;overflow:hidden}
+.cell{aspect-ratio:1/1;min-width:0;border:1px solid #475569;border-radius:7px;background:linear-gradient(145deg,#0e7490,#155e75);display:flex;align-items:center;justify-content:center;text-align:center;padding:3px;font-size:11px;line-height:1.25;cursor:pointer;transition:.15s;overflow:hidden}
+.cell:hover{transform:none;z-index:2}.cell.challenger{outline:3px solid #facc15;background:linear-gradient(145deg,#ca8a04,#854d0e)}.cell.target{outline:3px solid #f0abfc;background:linear-gradient(145deg,#a21caf,#701a75)}.cell.dead{opacity:.22;text-decoration:line-through;background:#0f172a}
+.cell .num{font-size:9px;color:#cbd5e1;display:block}.cell .name{font-weight:bold;word-break:break-word}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;color:#cbd5e1;font-size:12px}
+.dot{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-2px;margin-left:4px}
+.status{font-size:15px;margin:10px 0;padding:10px;border-radius:10px;background:#0f172a}
+.timer{font-size:44px;text-align:center;font-weight:900;margin:6px}.timer.warn{color:#fb7185}
+.row{display:flex;flex-wrap:wrap;gap:5px}.row button{flex:1}
+small{color:#94a3b8}
+@media(max-width:950px){.wrap{grid-template-columns:1fr}.grid{gap:0}.cell{font-size:8px}}
+</style>
+</head>
+<body>
+<header>
+<div><h1>مسابقه ۱۱۰ — مدرسه شاهد افشار</h1><div class="sub">نسخه مدرسه‌ای مدیریت زمین، چالشگر و دوئل‌ها</div></div>
+<div class="big">۱۱۰ خانه</div>
+</header>
+<div class="wrap">
+<section class="panel" id="controlPanel">
+<h2>۱) فهرست شرکت‌کنندگان</h2>
+<textarea id="names" placeholder="هر نام را در یک خط بنویسید&#10;اگر کمتر از ۱۰۰ نفر باشد، خانه‌های باقی‌مانده خالی می‌مانند."></textarea>
+<div class="row">
+<button class="primary" onclick="loadNames()">بارگذاری اسامی</button>
+<button class="dark" onclick="shuffleNames()">تصادفی‌سازی جایگاه‌ها</button>
+</div>
+<div class="info">
+<div>شرکت‌کنندگان فعال: <b id="activeCount">۰</b></div>
+<div>خانه‌های تحت مالکیت: <b id="ownedCount">۰</b></div>
+<div style="color:#86efac;font-size:12px">ذخیره‌سازی آنلاین و همگام‌سازی فعال است</div>
+</div>
+
+<h2 style="margin-top:18px">۲) کنترل مسابقه</h2>
+<div class="row">
+<button class="blue" onclick="pickChallenger()">🎯 انتخاب چالشگر</button>
+<button class="primary" onclick="pickTarget()">⚔️ انتخاب رقیب تصادفی</button>
+</div>
+<div class="row">
+<button class="green" onclick="winChallenger()">🏆 برد چالشگر</button>
+<button class="green" onclick="winTarget()">🏆 برد رقیب</button>
+</div>
+<div class="row">
+<button class="dark" onclick="startTimer()">▶ شروع ۴۵ ثانیه</button>
+<button class="red" onclick="resetGame()">↺ شروع مجدد</button>
+</div>
+<div class="timer" id="timer">۴۵</div>
+<div class="status" id="status">اسامی را بارگذاری کنید.</div>
+<div class="info" id="duel">
+<b>دوئل فعلی</b><br>
+چالشگر: <span id="challenger">—</span><br>
+رقیب: <span id="target">—</span>
+</div>
+<small>برای انتخاب رقیب دستی، ابتدا چالشگر را انتخاب کنید و سپس روی هر خانه از قلمرو یکی از همسایه‌های او کلیک کنید. هر بازیکن با تمام زمین‌هایش یک واحد حساب می‌شود. انتخاب تصادفی چالشگر و رقیب از میان بازیکنان دارای کمترین تعداد برد انجام می‌شود. اطلاعات بازی با هر تغییر در دیتابیس آنلاین ذخیره و برای کاربران دیگر همگام‌سازی می‌شود.</small>
+</section>
+
+<section class="panel">
+<h2>زمین مسابقه</h2>
+<div class="grid" id="grid"></div>
+<div class="legend">
+<span><i class="dot" style="background:#f59e0b"></i>چالشگر</span>
+<span><i class="dot" style="background:#38bdf8"></i>رقیب</span>
+<span><i class="dot" style="background:#334155"></i>خانه فعال</span>
+<span><i class="dot" style="background:#0f172a"></i>خانه خالی/حذف‌شده</span>
+</div>
+</section>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import { getDatabase, ref, onValue, runTransaction, set } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDT-NYRlAyoXktfvSP7lmlcSTCHsSCnqWY",
+  authDomain: "shahid-afshar-110.firebaseapp.com",
+  databaseURL: "https://shahid-afshar-110-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "shahid-afshar-110",
+  storageBucket: "shahid-afshar-110.firebasestorage.app",
+  messagingSenderId: "76748242184",
+  appId: "1:76748242184:web:a8a5a4fea09845d9b900bd"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const database = getDatabase(firebaseApp);
+const gameRef = ref(database, "gameState");
+let firebaseReady = false;
+let applyingRemote = false;
+let lastRemoteJSON = "";
+
+const fa=n=>String(n).replace(/\d/g,d=>"۰۱۲۳۴۵۶۷۸۹"[d]);
+let players=Array(110).fill(null), active=Array(110).fill(false);
+let owner=Array(110).fill(null), wins=Array(110).fill(0), challenger=null, target=null, timer=null, seconds=45;
+const SAVE_KEY='shahid_afshar_110_game_v1';
+let rosterHidden=false;
+
+function currentGameState(){
+ return {players,active,owner,wins,challenger,target,rosterHidden};
+}
+
+// بازیابی نسخه محلی؛ داده‌های Firebase در صورت وجود، بعداً اولویت دارند.
+function restoreGame(){
+ const raw=localStorage.getItem(SAVE_KEY);
+ if(!raw)return;
+ try{
+   const d=JSON.parse(raw);
+   if(!d || !Array.isArray(d.players) || d.players.length!==110)return;
+   players=d.players;
+   active=Array.isArray(d.active)&&d.active.length===110?d.active:Array(110).fill(false);
+   owner=Array.isArray(d.owner)&&d.owner.length===110?d.owner:Array(110).fill(null);
+   wins=Array.isArray(d.wins)&&d.wins.length===110?d.wins:Array(110).fill(0);
+   challenger=Number.isInteger(d.challenger)?d.challenger:null;
+   target=Number.isInteger(d.target)?d.target:null;
+   rosterHidden=!!d.rosterHidden;
+ }catch(e){
+   console.error('Local restore failed:',e);
+ }
+}
+
+function applyGameState(d){
+ if(!d || !Array.isArray(d.players) || d.players.length!==110) return false;
+ applyingRemote=true;
+ players=d.players;
+ active=Array.isArray(d.active)&&d.active.length===110?d.active:Array(110).fill(false);
+ owner=Array.isArray(d.owner)&&d.owner.length===110?d.owner:Array(110).fill(null);
+ wins=Array.isArray(d.wins)&&d.wins.length===110?d.wins:Array(110).fill(0);
+ challenger=Number.isInteger(d.challenger)?d.challenger:null;
+ target=Number.isInteger(d.target)?d.target:null;
+ rosterHidden=!!d.rosterHidden;
+ const n=document.getElementById('names');
+ if(n)n.value=players.filter(Boolean).join('\n');
+ const panel=document.getElementById('controlPanel');
+ if(panel)panel.style.display=rosterHidden?'none':'';
+ const wrap=document.querySelector('.wrap');
+ if(wrap)wrap.style.gridTemplateColumns=rosterHidden?'1fr':'340px 1fr';
+ render();
+ applyingRemote=false;
+ return true;
+}
+
+function saveGame(){
+ const state=currentGameState();
+ try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch(e){}
+ if(!firebaseReady || applyingRemote)return;
+ const json=JSON.stringify(state);
+ if(json===lastRemoteJSON)return;
+ lastRemoteJSON=json;
+ set(gameRef,state).catch(err=>{
+   console.error('Firebase save failed:',err);
+   setStatus('ذخیره آنلاین انجام نشد؛ قوانین دسترسی Firebase را بررسی کنید.');
+ });
+}
+
+function startFirebaseSync(){
+ onValue(gameRef, snapshot=>{
+   const remote=snapshot.val();
+   if(remote){
+     const json=JSON.stringify(remote);
+     if(json!==lastRemoteJSON){
+       lastRemoteJSON=json;
+       applyGameState(remote);
+     }
+   }else{
+     const localRaw=localStorage.getItem(SAVE_KEY);
+     let initial=currentGameState();
+     if(localRaw){
+       try{
+         const parsed=JSON.parse(localRaw);
+         if(Array.isArray(parsed.players)&&parsed.players.length===110)initial=parsed;
+       }catch(e){}
+     }
+     runTransaction(gameRef,current=>current===null?initial:current)
+       .catch(err=>{
+         console.error('Firebase initialization failed:',err);
+         setStatus('راه‌اندازی دیتابیس ناموفق بود؛ قوانین دسترسی Firebase را بررسی کنید.');
+       });
+   }
+   firebaseReady=true;
+ },err=>{
+   console.error('Firebase read failed:',err);
+   setStatus('اتصال به دیتابیس ناموفق بود؛ قوانین دسترسی Firebase را بررسی کنید.');
+ });
+}
+
+function toggleRoster(){
+ rosterHidden=!rosterHidden;
+ const p=document.getElementById('controlPanel');
+ if(p)p.style.display=rosterHidden?'none':'';
+ const w=document.querySelector('.wrap');
+ if(w)w.style.gridTemplateColumns=rosterHidden?'1fr':'340px 1fr';
+ saveGame();
+}
+
+function render(){
+ const g=document.getElementById('grid');
+ g.innerHTML='';
+ const firstCellByOwner=new Map();
+ for(let i=0;i<110;i++){
+   if(owner[i]!==null && players[owner[i]] && !firstCellByOwner.has(owner[i])){
+     firstCellByOwner.set(owner[i],i);
+   }
+ }
+ for(let i=0;i<110;i++){
+   const c=document.createElement('div');
+   c.className='cell';
+   const o=owner[i];
+   const hasOwner=o!==null && !!players[o];
+   if(!hasOwner){
+     c.classList.add('dead');
+   }else{
+     const hue=(o*47)%360, fill=`hsl(${hue} 65% 32%)`;
+     c.style.background=fill;c.style.borderColor=fill;c.style.borderRadius='0';
+     c.style.opacity='1';c.style.textDecoration='none';
+     const r=Math.floor(i/10),col=i%10;
+     const same=(rr,cc)=>rr>=0&&rr<11&&cc>=0&&cc<10&&owner[rr*10+cc]===o;
+     const edge='2px solid #f8fafc';
+     const joined=`0px solid ${fill}`;
+     c.style.borderTop=same(r-1,col)?joined:edge;
+     c.style.borderBottom=same(r+1,col)?joined:edge;
+     c.style.borderLeft=same(r,col-1)?joined:edge;
+     c.style.borderRight=same(r,col+1)?joined:edge;
+   }
+   if(i===challenger)c.classList.add('challenger');
+   if(i===target)c.classList.add('target');
+   const label=hasOwner && firstCellByOwner.get(o)===i
+     ? `<span class="name">${players[o]}</span><span style="display:block;font-size:8px;color:#fde68a">برد: ${fa(wins[o]||0)}</span>`
+     : '';
+   c.innerHTML=`<div><span class="num">${fa(i+1)}</span>${label}</div>`;
+   c.onclick=()=>manualTarget(i);
+   g.appendChild(c);
+ }
+ document.getElementById('activeCount').textContent=fa(active.filter(Boolean).length);
+ document.getElementById('ownedCount').textContent=fa(owner.filter(x=>x!==null).length);
+ document.getElementById('challenger').textContent=challenger===null?'—':players[challenger]||'—';
+ document.getElementById('target').textContent=target===null?'—':players[target]||'—';
+ saveGame();
+}
+
+function loadNames(){
+ const a=document.getElementById('names').value.split(/\n|,/).map(x=>x.trim()).filter(Boolean).slice(0,110);
+ players=Array(110).fill(null);active=Array(110).fill(false);owner=Array(110).fill(null);wins=Array(110).fill(0);
+ a.forEach((n,i)=>{players[i]=n;active[i]=true;owner[i]=i});
+ challenger=target=null;stopTimer();
+ setStatus(a.length?`تعداد ${fa(a.length)} شرکت‌کننده بارگذاری شد.`:'هنوز اسمی وارد نشده است.');
+ render();
+}
+
+function shuffleNames(){
+ const statsByName=new Map();
+ players.forEach((n,i)=>{if(n)statsByName.set(n,wins[i]||0)});
+ const a=players.filter(Boolean);
+ for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+ players=Array(110).fill(null);active=Array(110).fill(false);owner=Array(110).fill(null);wins=Array(110).fill(0);
+ a.forEach((n,i)=>{players[i]=n;active[i]=true;owner[i]=i;wins[i]=statsByName.get(n)||0});
+ challenger=target=null;
+ setStatus('جایگاه شرکت‌کنندگان به‌صورت تصادفی تغییر کرد.');
+ render();
+}
+
+function neighbors(playerIndex){
+ const adjacentOwners=new Set();
+ for(let i=0;i<110;i++){
+   if(owner[i]!==playerIndex)continue;
+   const r=Math.floor(i/10),c=i%10;
+   for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+     if(!dr&&!dc)continue;
+     const rr=r+dr,cc=c+dc;
+     if(rr<0||rr>=11||cc<0||cc>=10)continue;
+     const other=owner[rr*10+cc];
+     if(other!==null&&other!==playerIndex&&active[other])adjacentOwners.add(other);
+   }
+ }
+ return [...adjacentOwners];
+}
+
+function randomAmongFewestWins(candidates){
+ if(!candidates.length)return null;
+ const minWins=Math.min(...candidates.map(i=>wins[i]||0));
+ const tied=candidates.filter(i=>(wins[i]||0)===minWins);
+ return tied[Math.floor(Math.random()*tied.length)];
+}
+
+function pickChallenger(){
+ const a=active.map((v,i)=>v?i:null).filter(x=>x!==null);
+ if(!a.length){setStatus('شرکت‌کننده فعالی باقی نمانده است.');return}
+ challenger=randomAmongFewestWins(a);target=null;
+ setStatus(`چالشگر انتخاب شد: ${players[challenger]} (برد: ${fa(wins[challenger]||0)}) — اکنون یک همسایه را انتخاب کنید.`);
+ render();
+}
+
+function manualTarget(cellIndex){
+ if(challenger===null)return;
+ const selectedOwner=owner[cellIndex];
+ if(selectedOwner===null||!active[selectedOwner]||selectedOwner===challenger)return;
+ if(!neighbors(challenger).includes(selectedOwner)){setStatus('این قلمرو با زمین‌های چالشگر همسایه نیست.');return}
+ target=selectedOwner;
+ setStatus(`رقیب انتخاب شد: ${players[target]} (برد: ${fa(wins[target]||0)})`);
+ render();
+}
+
+function pickTarget(){
+ if(challenger===null){setStatus('ابتدا چالشگر را انتخاب کنید.');return}
+ const a=neighbors(challenger);
+ if(!a.length){setStatus('چالشگر همسایه فعالی ندارد.');return}
+ target=randomAmongFewestWins(a);
+ setStatus(`رقیب تصادفی انتخاب شد: ${players[target]} (برد: ${fa(wins[target]||0)})`);
+ render();
+}
+
+function resolve(winner,loser){
+ if(challenger===null||target===null){setStatus('ابتدا چالشگر و رقیب را مشخص کنید.');return}
+ const w=winner,l=loser;
+ wins[w]=(wins[w]||0)+1;
+ for(let i=0;i<110;i++)if(owner[i]===l)owner[i]=w;
+ active[l]=false;
+ setStatus(`برنده: ${players[w]} — ${players[l]} حذف شد و خانه‌های او به برنده منتقل شد.`);
+ challenger=target=null;stopTimer();render();
+}
+
+function winChallenger(){resolve(challenger,target)}
+function winTarget(){resolve(target,challenger)}
+function setStatus(s){document.getElementById('status').textContent=s}
+
+function startTimer(){
+ stopTimer();seconds=45;updateTimer();
+ timer=setInterval(()=>{seconds--;updateTimer();if(seconds<=0){stopTimer();setStatus('⏰ زمان ۴۵ ثانیه به پایان رسید.');}},1000);
+}
+function updateTimer(){
+ const e=document.getElementById('timer');
+ e.textContent=fa(seconds);
+ e.classList.toggle('warn',seconds<=10);
+}
+function stopTimer(){
+ if(timer){clearInterval(timer);timer=null}
+ seconds=45;updateTimer();
+}
+function resetGame(){
+ if(!confirm('مطمئنی می‌خواهی مسابقه را پاک کنی؟ این کار اطلاعات ذخیره‌شده را هم تغییر می‌دهد.'))return;
+ players=Array(110).fill(null);active=Array(110).fill(false);owner=Array(110).fill(null);wins=Array(110).fill(0);
+ challenger=target=null;document.getElementById('names').value='';
+ stopTimer();setStatus('مسابقه پاک شد.');render();
+}
+
+// ابتدا اطلاعات محلی بازیابی می‌شود؛ سپس Firebase اطلاعات آنلاین را همگام می‌کند.
+restoreGame();
+render();
+if(rosterHidden){
+ const p=document.getElementById('controlPanel');
+ if(p)p.style.display='none';
+ const w=document.querySelector('.wrap');
+ if(w)w.style.gridTemplateColumns='1fr';
+}
+Object.assign(window,{
+ loadNames,shuffleNames,pickChallenger,pickTarget,
+ resetGame,startTimer,toggleRoster,winChallenger,winTarget
+});
+startFirebaseSync();
+</script>
+</body>
+</html>
